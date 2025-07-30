@@ -1,57 +1,72 @@
 globals [
-  tasa-fallo         ;; probabilidad de fallo por tick
-  tiempo-recuperacion  ;; ticks que tarda un microservicio en recuperarse
+  tasa-llegada              ;; probabilidad de llegada de un visitante en un tick
+  usuarios-activos          ;; cuántos están siendo atendidos ahora
+  usuarios-rechazados       ;; no pudieron ser atendidos
+  total-visitas
 ]
 
 turtles-own [
-  estado               ;; "activo" o "caido"
-  tiempo-restante      ;; tiempo restante para recuperación
+  tiempo-en-sitio           ;; ticks que permanece el usuario activo
+  atendido                  ;; si fue o no atendido
 ]
 
 to setup
   clear-all
-  set tasa-fallo 0.01                ;; 1% de probabilidad por tick (ajustable con slider)
-  set tiempo-recuperacion 10         ;; 10 ticks para recuperar (ajustable con slider)
-  create-turtles 100 [
-    setxy random-xcor random-ycor
-    set estado "activo"
-    set color green
-    set shape "square 2"
-    set tiempo-restante 0
-  ]
+  set tasa-llegada 0.2             ;; 20% de probabilidad de llegada por tick (ajustable con slider)
+  set usuarios-activos 0
+  set usuarios-rechazados 0
+  set total-visitas 0
   reset-ticks
 end
 
 to go
-  ask turtles [
-    comportamiento-microservicio
-  ]
-  actualizar-colores
+  generar-trafico
+  procesar-usuarios
+  actualizar-metricas
   tick
 end
 
-to comportamiento-microservicio
-  (ifelse
-    estado = "activo" [
-    ;; posibilidad de fallar
-    if random-float 1 < tasa-fallo [
-      set estado "caido"
-      set tiempo-restante tiempo-recuperacion
-      ]
+to generar-trafico
+  ;; Los visitantes llegan con cierta probabilidad
+  if random-float 1 < tasa-llegada [
+    create-turtles 1 [
+      setxy random-xcor random-ycor
+      set tiempo-en-sitio random 100 + 50         ;; entre 5 y 14 ticks en el sitio
+      set atendido false
+      set color red
+      set shape "square 2"
+      set total-visitas total-visitas + 1
     ]
-    estado = "caido" [
-    set tiempo-restante tiempo-restante - 1
-    if tiempo-restante <= 0 [
-      set estado "activo"
-      ]
-  ])
+  ]
 end
 
-to actualizar-colores
+to procesar-usuarios
+  set usuarios-activos count turtles with [atendido = true]
   ask turtles [
-    if estado = "activo" [ set color green ]
-    if estado = "caido" [ set color red ]
+    if not atendido [
+      ifelse usuarios-activos < capacidad-servidor
+        [
+          set atendido true
+          set color green
+          set usuarios-activos usuarios-activos + 1
+        ]
+        [
+          set usuarios-rechazados usuarios-rechazados + 1
+          die    ;; elimina los que no pudieron ser atendidos
+        ]
+     ]
   ]
+  ;; Reducir el tiempo en el sitio y eliminar si ya terminó
+  ask turtles with [atendido] [
+    set tiempo-en-sitio tiempo-en-sitio - 1
+    if tiempo-en-sitio <= 0 [ die ]
+  ]
+end
+
+to actualizar-metricas
+  set-current-plot "Picos de trafico"
+  set-current-plot-pen "activos"
+  plot count turtles with [atendido = true]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -118,10 +133,10 @@ NIL
 MONITOR
 700
 289
-796
+804
 334
-Fallos
-count turtles with [estado = \"caido\"]
+Usuarios Activos
+usuarios-activos
 17
 1
 11
@@ -132,7 +147,7 @@ MONITOR
 926
 396
 Activos
-count turtles with [estado = \"activo\"]
+total-visitas
 17
 1
 11
@@ -153,6 +168,50 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+1204
+200
+1404
+350
+Picos de trafico
+NIL
+NIL
+0.0
+10.0
+0.0
+20.0
+true
+false
+"" ""
+PENS
+"activos" 1.0 0 -16777216 true "" "plot count turtles with [atendido? = true]"
+
+SLIDER
+982
+83
+1154
+116
+capacidad-servidor
+capacidad-servidor
+0
+20
+20.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+853
+283
+984
+328
+Usuarios Rechazados
+usuarios-rechazados
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
