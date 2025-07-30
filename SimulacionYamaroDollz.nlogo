@@ -16,6 +16,7 @@ to setup
     setxy random-xcor random-ycor
     set estado "activo"
     set color green
+    set shape "square 2"
     set tiempo-restante 0
   ]
   reset-ticks
