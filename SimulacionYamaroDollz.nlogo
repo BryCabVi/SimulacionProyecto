@@ -1,5 +1,4 @@
 globals [
-  tasa-llegada              ;; probabilidad de llegada de un visitante en un tick
   usuarios-activos          ;; cuántos están siendo atendidos ahora
   usuarios-rechazados       ;; no pudieron ser atendidos
   total-visitas
@@ -12,7 +11,6 @@ turtles-own [
 
 to setup
   clear-all
-  set tasa-llegada 0.2             ;; 20% de probabilidad de llegada por tick (ajustable con slider)
   set usuarios-activos 0
   set usuarios-rechazados 0
   set total-visitas 0
@@ -52,6 +50,8 @@ to procesar-usuarios
         ]
         [
           set usuarios-rechazados usuarios-rechazados + 1
+          set color red
+          fd 1 wait 0.1
           die    ;; elimina los que no pudieron ser atendidos
         ]
      ]
@@ -70,13 +70,13 @@ to actualizar-metricas
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-647
-448
+98
+16
+614
+533
 -1
 -1
-13.0
+15.4
 1
 10
 1
@@ -97,10 +97,10 @@ ticks
 30.0
 
 BUTTON
-700
-138
-763
-171
+636
+88
+761
+188
 setup
 setup
 NIL
@@ -114,11 +114,11 @@ NIL
 1
 
 BUTTON
-788
-139
-851
-172
-go
+636
+429
+761
+529
+Tick
 go
 NIL
 1
@@ -131,32 +131,21 @@ NIL
 1
 
 MONITOR
-700
-289
-804
-334
+762
+19
+866
+64
 Usuarios Activos
 usuarios-activos
 17
 1
 11
 
-MONITOR
-700
-351
-926
-396
-Activos
-total-visitas
-17
-1
-11
-
 BUTTON
-877
-138
-940
-171
+636
+253
+761
+353
 go
 go
 T
@@ -170,10 +159,10 @@ NIL
 1
 
 PLOT
-1204
-200
-1404
-350
+783
+88
+1447
+531
 Picos de trafico
 NIL
 NIL
@@ -187,11 +176,48 @@ false
 PENS
 "activos" 1.0 0 -16777216 true "" "plot count turtles with [atendido? = true]"
 
+MONITOR
+886
+19
+1017
+64
+Usuarios Rechazados
+usuarios-rechazados
+17
+1
+11
+
+MONITOR
+639
+18
+735
+63
+Total de visitas
+total-visitas
+17
+1
+11
+
 SLIDER
-982
-83
-1154
-116
+1243
+19
+1443
+52
+tasa-llegada
+tasa-llegada
+0.1
+1
+0.2
+0.1
+1
+Porcentaje
+HORIZONTAL
+
+SLIDER
+1028
+18
+1226
+51
 capacidad-servidor
 capacidad-servidor
 0
@@ -199,19 +225,8 @@ capacidad-servidor
 20.0
 1
 1
-NIL
+Usuarios
 HORIZONTAL
-
-MONITOR
-853
-283
-984
-328
-Usuarios Rechazados
-usuarios-rechazados
-17
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?
